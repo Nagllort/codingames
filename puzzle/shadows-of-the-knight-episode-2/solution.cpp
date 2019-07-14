@@ -40,7 +40,7 @@ private:
 };
 
 void Axis::calculateDirection(){
-    direction_ = (position_ > (maxPosition_ - position_)) ? -1 : 1;
+    direction_ = ((position_ - minPosition_) > (maxPosition_ - position_)) ? -1 : 1;
 }
 
 //Coordinates for the next jump
