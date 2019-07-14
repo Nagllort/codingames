@@ -11,12 +11,14 @@ using namespace std;
 
 struct Axis{
     
-    Axis(int currentPosition, int maxPosition): position_(currentPosition), maxPosition_(maxPosition), minPosition_(0){}
+    Axis(bool isX, int currentPosition, int maxPosition): isX_(isX),position_(currentPosition), maxPosition_(maxPosition), minPosition_(0){}
     
     void calculateDirection();
     void calculatePosition();
-    void jump(const Axis& axis);
+    void jump(const Axis& athward);
     void calculateMaxMin();
+    
+    friend void returnToTheArea(vector<Axis>& coords);
     
 private:
     
@@ -25,10 +27,13 @@ private:
     int minPosition_;
     int maxPosition_;
     char status_; //Gadget readings after the last jump
+    int athwartPosition_;
+    bool isX_;
     
     void setMaxMinWarmer();
     void setMaxMinColder();
     void setMaxMinSame();
+    bool isLeaveLimits();
     
 };
 
@@ -46,18 +51,17 @@ void Axis::calculatePosition(){
     }
 }
 
-void Axis::jump(const Axis& axis){
-    string bombDir;
-    static bool thisX = true;
-    if(thisX){
-        cout << position_ << " " << axis.position_ << endl;
-    }
-    else{
-        cout << axis.position_ << " " << position_ << endl;
-    }
-    thisX = !thisX;
-    cin >> bombDir; cin.ignore();
-    status_ = bombDir.at(0);
+void Axis::jump(const Axis& athward){
+        string bombDir;
+        if(isX_){
+            cout << position_ << " " << athward.position_ << endl;
+        }
+        else{
+            cout << athward.position_ << " " << position_ << endl;
+        }
+        athwartPosition_ = athward.position_;
+        cin >> bombDir; cin.ignore();
+        status_ = bombDir.at(0);
 }
 
 void Axis::calculateMaxMin(){
@@ -76,6 +80,10 @@ void Axis::calculateMaxMin(){
     }
 }
 
+bool Axis::isLeaveLimits(){
+        return position_ < minPosition_ || position_ > maxPosition_;
+}
+
 void Axis::setMaxMinWarmer(){ 
     int center = (maxPosition_ + minPosition_)/ 2;
     direction_ == -1 ? maxPosition_ = center - (maxPosition_ + minPosition_ +1)%2 : minPosition_ = center + (maxPosition_ + minPosition_+1)%2;
@@ -92,6 +100,23 @@ void Axis::setMaxMinSame(){
     minPosition_ = center;
 }
 
+void returnToTheArea(vector<Axis>& coords){
+        bool isLeaveLimits;
+        for(int i = 0; i < 2; ++i){
+            isLeaveLimits = coords.at(i).isLeaveLimits();
+            if(isLeaveLimits) break;
+        }
+        
+        if(isLeaveLimits){
+            for(int i = 0; i < 2; ++i){
+                coords.at(i).position_ = coords.at(i).maxPosition_;
+            } 
+            cout << coords.at(0).position_ << " " << coords.at(1).position_ << endl;
+            string bombDir;
+            cin >> bombDir;
+        }
+}
+
 
 void findBomb(vector<Axis>& coords)
 {
@@ -101,6 +126,8 @@ void findBomb(vector<Axis>& coords)
         coords.at(i).jump(coords.at((i+1)%2)); // x&y or y&x
         coords.at(i).calculateMaxMin();
     }
+    
+    returnToTheArea(coords);
 }
 
 int main()
@@ -116,7 +143,7 @@ int main()
     string bombDir;
     cin >> bombDir;
     
-    vector<Axis> coords {{X0, W-1}, {Y0, H-1}};
+    vector<Axis> coords {{true, X0, W-1}, {false, Y0, H-1}};
     
     // game loop
     while (1) {        
