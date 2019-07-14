@@ -11,12 +11,13 @@ using namespace std;
 
 struct Axis{
     
-    Axis(bool isX, int currentPosition, int maxPosition): isX_(isX),position_(currentPosition), maxPosition_(maxPosition), minPosition_(0){}
+    Axis(bool isX, int currentPosition, int maxPosition): isX_(isX),position_(currentPosition), maxPosition_(maxPosition), minPosition_(0), found_(maxPosition == 0){}
     
     void calculateDirection();
     void calculatePosition();
     void jump(const Axis& athward);
     void calculateMaxMin();
+    bool isFound() const {return found_;}
     
     friend void returnToTheArea(vector<Axis>& coords);
     
@@ -29,6 +30,7 @@ private:
     char status_; //Gadget readings after the last jump
     int athwartPosition_;
     bool isX_;
+    bool found_; //bomb location found
     
     void setMaxMinWarmer();
     void setMaxMinColder();
@@ -87,17 +89,22 @@ bool Axis::isLeaveLimits(){
 void Axis::setMaxMinWarmer(){ 
     int center = (maxPosition_ + minPosition_)/ 2;
     direction_ == -1 ? maxPosition_ = center - (maxPosition_ + minPosition_ +1)%2 : minPosition_ = center + (maxPosition_ + minPosition_+1)%2;
+    if(maxPosition_ == minPosition_) 
+        found_ = true; 
 }
 
 void Axis::setMaxMinColder(){ 
     int center = (maxPosition_ + minPosition_)/ 2;
     direction_ == -1 ? minPosition_ = center + (maxPosition_ + minPosition_ +1)%2 : maxPosition_ = center - (maxPosition_ + minPosition_+1)%2;
+    if(maxPosition_ == minPosition_) 
+        found_ = true; 
 }
 
 void Axis::setMaxMinSame(){
     int center = (maxPosition_ + minPosition_)/ 2;
     maxPosition_ = center;
     minPosition_ = center;
+    found_ = true; 
 }
 
 void returnToTheArea(vector<Axis>& coords){
@@ -121,6 +128,7 @@ void returnToTheArea(vector<Axis>& coords){
 void findBomb(vector<Axis>& coords)
 {
     for(int i = 0; i < 2; ++i){
+        if(coords.at(i).isFound()) continue;
         coords.at(i).calculateDirection(); 
         coords.at(i).calculatePosition(); 
         coords.at(i).jump(coords.at((i+1)%2)); // x&y or y&x
