@@ -28,7 +28,6 @@ private:
     int minPosition_;
     int maxPosition_;
     char status_; //Gadget readings after the last jump
-    int athwartPosition_;
     bool isX_;
     bool found_; //bomb location found
     
@@ -61,7 +60,6 @@ void Axis::jump(const Axis& athward){
         else{
             cout << athward.position_ << " " << position_ << endl;
         }
-        athwartPosition_ = athward.position_;
         cin >> bombDir; cin.ignore();
         status_ = bombDir.at(0);
 }
@@ -113,11 +111,27 @@ void returnToTheArea(vector<Axis>& coords){
             isLeaveLimits = coords.at(i).isLeaveLimits();
             if(isLeaveLimits) break;
         }
-        
+        //Find the optimal return point to reduce the number of jumps required.
         if(isLeaveLimits){
             for(int i = 0; i < 2; ++i){
-                coords.at(i).position_ = coords.at(i).maxPosition_;
-            } 
+                if(coords.at(i).status_ == 'C'){
+                    if(coords.at(i).direction_ == 1){
+                        coords.at(i).position_ = coords.at(i).maxPosition_;
+                    }
+                    else{
+                        coords.at(i).position_ = coords.at(i).minPosition_;
+                    }
+                }
+                else{
+                    if(coords.at(i).direction_ == 1){
+                        coords.at(i).position_ = coords.at(i).minPosition_;
+                    }
+                    else{
+                        coords.at(i).position_ = coords.at(i).maxPosition_;
+                    }
+                }
+            }
+
             cout << coords.at(0).position_ << " " << coords.at(1).position_ << endl;
             string bombDir;
             cin >> bombDir;
