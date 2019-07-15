@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <sstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -11,11 +13,11 @@ using namespace std;
 
 struct Axis{
     
-    Axis(bool isX, int currentPosition, int maxPosition): isX_(isX),position_(currentPosition), maxPosition_(maxPosition), minPosition_(0), found_(maxPosition == 0){}
+    Axis(int currentPosition, int maxPosition): position_(currentPosition), maxPosition_(maxPosition), minPosition_(0), found_(maxPosition == 0){}
     
     void calculateDirection();
     void calculatePosition();
-    void jump(const Axis& athward);
+    void jump(vector<Axis>& coords);
     void calculateMaxMin();
     bool isFound() const {return found_;}
     
@@ -28,7 +30,6 @@ private:
     int minPosition_;
     int maxPosition_;
     char status_; //Gadget readings after the last jump
-    bool isX_;
     bool found_; //bomb location found
     
     void setMaxMinWarmer();
@@ -52,14 +53,11 @@ void Axis::calculatePosition(){
     }
 }
 
-void Axis::jump(const Axis& athward){
+void Axis::jump(vector<Axis>& coords){
         string bombDir;
-        if(isX_){
-            cout << position_ << " " << athward.position_ << endl;
-        }
-        else{
-            cout << athward.position_ << " " << position_ << endl;
-        }
+        stringstream jumpStr;
+        for_each(coords.cbegin(), coords.cend(), [&](const Axis& a){ jumpStr << " " << a.position_;});
+        cout << jumpStr.str().substr(1) << endl;
         cin >> bombDir; cin.ignore();
         status_ = bombDir.at(0);
 }
@@ -107,13 +105,14 @@ void Axis::setMaxMinSame(){
 
 void returnToTheArea(vector<Axis>& coords){
         bool isLeaveLimits;
-        for(int i = 0; i < 2; ++i){
+        for(int i = 0; i < coords.size(); ++i){
             isLeaveLimits = coords.at(i).isLeaveLimits();
             if(isLeaveLimits) break;
         }
         //Find the optimal return point to reduce the number of jumps required.
         if(isLeaveLimits){
-            for(int i = 0; i < 2; ++i){
+            stringstream jumpStr;
+            for(int i = 0; i < coords.size(); ++i){
                 if(coords.at(i).status_ == 'C'){
                     if(coords.at(i).direction_ == 1){
                         coords.at(i).position_ = coords.at(i).maxPosition_;
@@ -130,9 +129,11 @@ void returnToTheArea(vector<Axis>& coords){
                         coords.at(i).position_ = coords.at(i).maxPosition_;
                     }
                 }
+                jumpStr << " " << coords.at(i).position_;
             }
+            
+            cout << jumpStr.str().substr(1) << endl;
 
-            cout << coords.at(0).position_ << " " << coords.at(1).position_ << endl;
             string bombDir;
             cin >> bombDir;
         }
@@ -141,11 +142,11 @@ void returnToTheArea(vector<Axis>& coords){
 
 void findBomb(vector<Axis>& coords)
 {
-    for(int i = 0; i < 2; ++i){
+    for(int i = 0; i < coords.size(); ++i){
         if(coords.at(i).isFound()) continue;
         coords.at(i).calculateDirection(); 
         coords.at(i).calculatePosition(); 
-        coords.at(i).jump(coords.at((i+1)%2)); // x&y or y&x
+        coords.at(i).jump(coords); // x&y or y&x
         coords.at(i).calculateMaxMin();
     }
     
@@ -165,7 +166,7 @@ int main()
     string bombDir;
     cin >> bombDir;
     
-    vector<Axis> coords {{true, X0, W-1}, {false, Y0, H-1}};
+    vector<Axis> coords {{X0, W-1}, {Y0, H-1}};
     
     // game loop
     while (1) {        
