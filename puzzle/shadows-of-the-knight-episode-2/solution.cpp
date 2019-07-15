@@ -17,7 +17,7 @@ struct Axis{
     
     void calculateDirection();
     void calculatePosition();
-    void jump(vector<Axis>& coords);
+    void jump(const vector<Axis>& coords);
     void calculateMaxMin();
     bool isFound() const {return found_;}
     
@@ -53,7 +53,7 @@ void Axis::calculatePosition(){
     }
 }
 
-void Axis::jump(vector<Axis>& coords){
+void Axis::jump(const vector<Axis>& coords){
         string bombDir;
         stringstream jumpStr;
         for_each(coords.cbegin(), coords.cend(), [&](const Axis& a){ jumpStr << " " << a.position_;});
