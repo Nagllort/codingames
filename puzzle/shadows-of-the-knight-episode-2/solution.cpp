@@ -20,8 +20,9 @@ struct Axis{
     void jump(const vector<Axis>& coords);
     void calculateMaxMin();
     bool isFound() const {return found_;}
-    
-    friend void returnToTheArea(vector<Axis>& coords);
+    bool isLeaveLimits();
+    int getPosition();
+    void setCorrectPosition();
     
 private:
     
@@ -35,7 +36,6 @@ private:
     void setMaxMinWarmer();
     void setMaxMinColder();
     void setMaxMinSame();
-    bool isLeaveLimits();
     
 };
 
@@ -83,15 +83,30 @@ bool Axis::isLeaveLimits(){
 }
 
 void Axis::setMaxMinWarmer(){ 
-    int center = (maxPosition_ + minPosition_)/ 2;
-    direction_ == -1 ? maxPosition_ = center - (maxPosition_ + minPosition_ +1)%2 : minPosition_ = center + (maxPosition_ + minPosition_+1)%2;
+    int center = (maxPosition_ + minPosition_) / 2;
+    int stepFromTheCenter = (maxPosition_ + minPosition_ + 1) % 2;
+    
+    if(direction_ == -1){
+        maxPosition_ = center - stepFromTheCenter;
+    }
+    else{ 
+        minPosition_ = center + stepFromTheCenter;
+    }
     if(maxPosition_ == minPosition_) 
         found_ = true; 
 }
 
 void Axis::setMaxMinColder(){ 
-    int center = (maxPosition_ + minPosition_)/ 2;
-    direction_ == -1 ? minPosition_ = center + (maxPosition_ + minPosition_ +1)%2 : maxPosition_ = center - (maxPosition_ + minPosition_+1)%2;
+    int center = (maxPosition_ + minPosition_) / 2;
+    int stepFromTheCenter = (maxPosition_ + minPosition_ + 1) % 2;
+    
+    if(direction_ == -1){
+        minPosition_ = center + stepFromTheCenter;
+    }
+    else{
+        maxPosition_ = center - stepFromTheCenter;
+    }
+
     if(maxPosition_ == minPosition_) 
         found_ = true; 
 }
@@ -103,34 +118,43 @@ void Axis::setMaxMinSame(){
     found_ = true; 
 }
 
+void Axis::setCorrectPosition(){
+    
+    if(status_ == 'C'){
+        if(direction_ == 1){
+            position_ = maxPosition_;
+        }
+        else{
+            position_ = minPosition_;
+        }
+    }
+    else{
+        if(direction_ == 1){
+            position_ = minPosition_;
+        }
+        else{
+            position_ = maxPosition_;
+        }
+    }
+}
+
+int Axis::getPosition(){
+    return position_;
+}
+
 void returnToTheArea(vector<Axis>& coords){
         bool isLeaveLimits;
         for(int i = 0; i < coords.size(); ++i){
             isLeaveLimits = coords.at(i).isLeaveLimits();
             if(isLeaveLimits) break;
         }
-        //Find the optimal return point to reduce the number of jumps required.
+        // Find the optimal return point to reduce the number of jumps required.
         if(isLeaveLimits){
             stringstream jumpStr;
-            for(int i = 0; i < coords.size(); ++i){
-                if(coords.at(i).status_ == 'C'){
-                    if(coords.at(i).direction_ == 1){
-                        coords.at(i).position_ = coords.at(i).maxPosition_;
-                    }
-                    else{
-                        coords.at(i).position_ = coords.at(i).minPosition_;
-                    }
-                }
-                else{
-                    if(coords.at(i).direction_ == 1){
-                        coords.at(i).position_ = coords.at(i).minPosition_;
-                    }
-                    else{
-                        coords.at(i).position_ = coords.at(i).maxPosition_;
-                    }
-                }
-                jumpStr << " " << coords.at(i).position_;
-            }
+            for_each(coords.begin(), coords.end(), [&](Axis& axis){ 
+                    axis.setCorrectPosition();
+                    jumpStr << " " << axis.getPosition();
+            });
             
             cout << jumpStr.str().substr(1) << endl;
 
@@ -140,8 +164,7 @@ void returnToTheArea(vector<Axis>& coords){
 }
 
 
-void findBomb(vector<Axis>& coords)
-{
+void findBomb(vector<Axis>& coords){
     for(int i = 0; i < coords.size(); ++i){
         if(coords.at(i).isFound()) continue;
         coords.at(i).calculateDirection(); 
@@ -153,8 +176,7 @@ void findBomb(vector<Axis>& coords)
     returnToTheArea(coords);
 }
 
-int main()
-{
+int main(){
     int W; // width of the building.
     int H; // height of the building.
     cin >> W >> H; cin.ignore();
@@ -169,7 +191,7 @@ int main()
     vector<Axis> coords {{X0, W-1}, {Y0, H-1}};
     
     // game loop
-    while (1) {        
+    while (1){        
         findBomb(coords);
     }
 }
